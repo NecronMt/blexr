@@ -19,7 +19,7 @@ export default new Router({
       component: Reports
     },
     {
-      path: '/reports/:report',
+      path: '/:report',
       component: Reports
     }
   ]

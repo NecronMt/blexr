@@ -1,7 +1,10 @@
 <template>
   <div class="main-content">
     <h1>Dashboard</h1>
-    <div class="Chart__content">
+    <div class="error-message" v-if="showError">
+      {{ errorMessage }}
+    </div>
+    <div class="chart-content">
       <line-chart v-if="loaded" :chart-data="population" :chart-labels="labels"></line-chart>
     </div>
   </div>
@@ -20,36 +23,32 @@ export default {
 
 <script>
   import axios from 'axios'
-  import Datepicker from 'vuejs-datepicker'
   import LineChart from '@/components/LineChart'
-  import PackageInfo from '@/components/PackageInfo'
- 
+  import CountryInfo from '@/components/CountryInfo'
+
   export default {
     components: {
       LineChart,
-      CountryInfo      
+      CountryInfo
     },
     data () {
       return {
         country: null,
         countryName: '',
         loaded: false,
-        loading: false, 
-        population: [],       
-        labels: [],        
-        showError: false,        
-        errorMessage: 'Error',       
-        rawData: ''        
+        loading: false,
+        showError: false,
+        errorMessage: 'Error',
+        rawData: '',
+        labels: [],
+        population: []
       }
     },
     mounted () {
-      if (this.$route.params.country) {
-        this.country = this.$route.params.country
-        this.requestData()
-      }
+      this.requestData()
     },
     computed: {
-      
+
     },
     methods: {
       resetState () {
@@ -57,21 +56,68 @@ export default {
         this.showError = false
       },
       requestData () {
-        if (this.country === null || this.country === '' || this.country === 'undefined') {
-          this.showError = true
-          return
-        }
+        let promises = [], mainObject = {}
+        var date = new Date(Date.now())
+        var date_today = ''
+        date_today += date.getFullYear() + "-"
+        date_today += (date.getMonth()) + "-"
+        date_today += date.getDate()
+        console.log(date_today)
+
         this.resetState()
         this.loading = true
-        axios.get(`http://api.population.io:80/1.0/population/2018/${this.country}`)
-          .then(response => {
-            //do stuff
-          })
-          .catch(err => {
-            this.errorMessage = err.response.data.error
-            this.showError = true
-          })
+        // axios.get(`https://api.npmjs.org/downloads/range/${this.period}/${this.package}`)
+        // http://api.population.io:80/1.0/population/Brazil/2018-04-22/
+        const go = async () => {
+          console.log('async')
+          try {
+            const countriesPromise = axios(`http://api.population.io:80/1.0/countries`)
+            const populationbyagePromise = axios(`http://api.population.io:80/1.0/population/2018/aged/18/`)
+
+            // await all three promises to come back and destructure the result into their own variables
+            const [countries, populationbyage] = await Promise.all([countriesPromise, populationbyagePromise])
+            console.log(countries)
+            console.log(populationbyage)
+            console.log(countries.data, populationbyage.data)
+            console.log('end async')
+          } catch (e) {
+            console.error(e);
+          }
         }
+        go();
+
+        axios.get(`http://api.population.io:80/1.0/population/2018/aged/18/`)
+        .then(response => {
+          console.log(response.data)
+          this.rawData = response.data
+          this.population = response.data.map(entry => entry.total)
+          console.log(this.population)
+          this.labels = response.data.map(entry => entry.country)
+          console.log(this.labels)
+
+          this.loaded = true
+          this.loading = false
+        })
+        .catch(err => {
+          this.errorMessage = err.response.data.error
+          this.showError = true
+        })
+
+        // promises.push(
+        //   axios.get(`http://api.population.io:80/1.0/countries`)
+        // )
+        // promises.push(
+        //   axios.get(`http://api.population.io:80/1.0/population/2018/aged/18/`)
+        // )
+
+        // axios.all(promises).then(function(results) {
+        //   console.log(results)
+        //   results.forEach(function(response) {
+        //     console.log(response)
+        //     mainObject[response.data] = response.data;
+        //   })
+        //   console.log(mainObject)
+        // });
       }
     }
   }
