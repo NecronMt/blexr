@@ -1,11 +1,19 @@
 <template>
   <div class="main-content">
     <h1>Dashboard</h1>
+    <select v-model="sorting" @change="sortChart">
+      <option value="asc">Ascending</option>
+      <option value="desc">Descending</option>
+    </select>
     <div class="error-message" v-if="showError">
+      <h3>Oops!</h3>
       {{ errorMessage }}
     </div>
     <div class="chart-content">
-      <line-chart v-if="loaded" :chart-data="population" :chart-labels="labels"></line-chart>
+      <h3>World Population</h3>
+      <line-chart v-if="loaded" :chart-label="label" :chart-labels="labels" :chart-tooltip="tooltip" :chart-data="population"></line-chart>
+      <bar-chart v-if="loaded" :chart-label="label" :chart-labels="labels" :chart-tooltip="tooltip" :chart-data="population"></bar-chart>
+      <p>{{ selectedData }}</p>
     </div>
   </div>
 </template>
@@ -24,24 +32,30 @@ export default {
 <script>
   import axios from 'axios'
   import LineChart from '@/components/LineChart'
-  import CountryInfo from '@/components/CountryInfo'
+  import BarChart from '@/components/BarChart'
+  import countryData from '@/data/world.js'
 
   export default {
     components: {
       LineChart,
-      CountryInfo
+      BarChart
     },
+    props: ['testprop'],
     data () {
       return {
-        country: null,
-        countryName: '',
         loaded: false,
         loading: false,
         showError: false,
         errorMessage: 'Error',
-        rawData: '',
+        sorting: 'asc',
+        country: null,
+        countryName: '',
+        countryFullData: [],
+        label: '',
         labels: [],
-        population: []
+        tooltip: '',
+        population: [],
+        selectedData: {}
       }
     },
     mounted () {
@@ -51,57 +65,62 @@ export default {
 
     },
     methods: {
+      handleErrors(e) {
+        if (!e.response.ok) {
+          this.errorMessage = e.response.statusText
+          this.showError = true
+        }
+        return e.response
+      },
       resetState () {
         this.loaded = false
         this.showError = false
       },
-      requestData () {
-        let promises = [], mainObject = {}
-        var date = new Date(Date.now())
-        var date_today = ''
-        date_today += date.getFullYear() + "-"
-        date_today += (date.getMonth()) + "-"
-        date_today += date.getDate()
-        console.log(date_today)
-
+      chartClicked (event) {
+        console.log(event)
+      },
+      sortChart () {
         this.resetState()
         this.loading = true
+        if (this.sorting === 'asc') {
+          this.countryFullData.sort(function (pop1, pop2) { return pop1.population - pop2.population })
+        }
+        else {
+          this.countryFullData.sort(function (pop1, pop2) { return pop2.population - pop1.population })
+        }
+        this.populateChart()
+      },
+      populateChart () {
+        let countryLabels = []
+        let populationLabels = []
+        for (let i = 0; i < this.countryFullData.length; i++) {
+            countryLabels.push(this.countryFullData[i].country);
+            populationLabels.push(this.countryFullData[i].population);
+        }
+        console.log(countryLabels)
+        console.log(populationLabels)
+        this.population = populationLabels
+        this.labels = countryLabels
+        this.tooltip = 'Hi'
+        this.label = 'Population exploration'
+        this.loaded = true
+        this.loading = false
+      },
+      requestData () {
+        // http://api.population.io:80/1.0/population/2018/Brazil/
         // axios.get(`https://api.npmjs.org/downloads/range/${this.period}/${this.package}`)
         // http://api.population.io:80/1.0/population/Brazil/2018-04-22/
-        const go = async () => {
-          console.log('async')
-          try {
-            const countriesPromise = axios(`http://api.population.io:80/1.0/countries`)
-            const populationbyagePromise = axios(`http://api.population.io:80/1.0/population/2018/aged/18/`)
 
-            // await all three promises to come back and destructure the result into their own variables
-            const [countries, populationbyage] = await Promise.all([countriesPromise, populationbyagePromise])
-            console.log(countries)
-            console.log(populationbyage)
-            console.log(countries.data, populationbyage.data)
-            console.log('end async')
-          } catch (e) {
-            console.error(e);
-          }
-        }
-        go();
+        // const countriesPromise = axios(`http://api.population.io:80/1.0/countries`)
+        // const populationbyagePromise = axios(`http://api.population.io:80/1.0/population/2018/aged/18/`)
 
-        axios.get(`http://api.population.io:80/1.0/population/2018/aged/18/`)
-        .then(response => {
-          console.log(response.data)
-          this.rawData = response.data
-          this.population = response.data.map(entry => entry.total)
-          console.log(this.population)
-          this.labels = response.data.map(entry => entry.country)
-          console.log(this.labels)
-
-          this.loaded = true
-          this.loading = false
-        })
-        .catch(err => {
-          this.errorMessage = err.response.data.error
-          this.showError = true
-        })
+        // // await all three promises to come back and destructure the result into their own variables
+        // const [countries, populationbyage] = await Promise.all([
+        //   countriesPromise,
+        //   populationbyagePromise
+        // ])
+        // `http://api.population.io:80/1.0/population/`, {params:  {country: country, date: date_today}}
+        // countryObject[country] = axios.get(`http://api.population.io:80/1.0/population/${country}/${date_today}`)
 
         // promises.push(
         //   axios.get(`http://api.population.io:80/1.0/countries`)
@@ -118,6 +137,55 @@ export default {
         //   })
         //   console.log(mainObject)
         // });
+        // const go = async () => {
+        //   console.log('async')
+        // }
+        // go();
+        // FUNCTIONAL CHART
+        // axios.get(`http://api.population.io:80/1.0/population/2018/aged/18/`)
+        // .then(response => {
+        //   // console.log(response.data)
+        //   // console.log(this.labels)
+        //   // console.log(this.population)
+        //   this.population = response.data.map(entry => entry.total)
+        //   this.labels = response.data.map(entry => entry.country)
+        //   this.loaded = true
+        //   this.loading = false
+        // })
+        // .catch(err => {
+        //   this.errorMessage = err.response.data.error
+        //   this.showError = true
+        // })
+
+        const countryArray = countryData.countries
+        const othercountryArray = countryData.misccountrydata
+        let promises = []
+        let date = new Date(Date.now())
+        let date_today = date.getFullYear() + "-" + (date.getMonth()+1) + "-" + date.getDate()
+        console.log(date_today)
+
+        this.resetState()
+        this.loading = true
+
+        countryArray.forEach(function (country) {
+          promises.push(axios.get(`http://api.population.io:80/1.0/population/${country}/${date_today}`))
+        });
+
+        axios.all(promises).then((results) => {
+          let countryDataList = []
+          results.forEach(function(response, index) {
+            let countryObject = {
+              country: countryArray[index],
+              population: response.data.total_population.population
+            }
+            countryDataList.push(countryObject)
+          })
+          countryDataList.sort(function (pop1, pop2) { return pop1.population - pop2.population })
+
+          this.countryFullData = countryDataList
+          // POPULATE CHART HERE
+          this.populateChart()
+        });
       }
     }
   }
@@ -125,18 +193,5 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-h1, h2 {
-  font-weight: normal;
-}
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-a {
-  color: #42b983;
-}
+
 </style>
