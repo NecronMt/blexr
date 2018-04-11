@@ -31,8 +31,8 @@ export default {
 
 <script>
   import axios from 'axios'
-  import LineChart from '@/components/LineChart'
-  import BarChart from '@/components/BarChart'
+  import LineChart from '@/components/Charts/LineChart'
+  import BarChart from '@/components/Charts/BarChart'
 
   export default {
     components: {
