@@ -14,10 +14,6 @@ export default {
     chartLabel: {
       type: String,
       required: true
-    },
-    chartTooltip: {
-      type: String,
-      required: true
     }
   },
   data () {
@@ -62,8 +58,6 @@ export default {
           mode: 'nearest',
           callbacks: {
             label: function (tooltipItems, data) {
-              console.log(this.chartTooltip)
-              console.log(data)
               return tooltipItems.xLabel + ': ' + tooltipItems.yLabel
             }
           }
@@ -83,8 +77,8 @@ export default {
             borderColor: '#ff3300',
             pointBackgroundColor: 'white',
             borderWidth: 1,
-            pointBorderColor: '#800000',
-            backgroundColor: 'transparent',
+            pointBorderColor: '#f76b41',
+            backgroundColor: '#d2407e',
             data: this.chartData
           }
         ]

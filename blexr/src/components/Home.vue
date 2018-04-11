@@ -2,26 +2,46 @@
   <div class="main-content">
     <h1>Dashboard</h1>
 
-    <select v-model="sorting" @change="sortChart">
-      <option value="asc">Ascending</option>
-      <option value="desc">Descending</option>
-    </select>
+    <div class="data">
+      <div class="data-container">
+        <h3>Male to Female ratio:</h3>
+        <div class="panel-content">
+          <h3>Country with the highest Male to Female ratio</h3>
+          <p v-html="highestMaleToFemaleRatio"></p>
+        </div>
+        <h3>Female to Male ratio:</h3>
+        <div class="panel-content">
+          <h3>Country with the highest Female to Male ratio</h3>
+          <p v-html="highestFemaleToMaleRatio"></p>
+        </div>
+      </div>
+      <div class="data-container">
+          <h3>Top 10 countries with the highest population:</h3>
+          <doughnut-chart v-if="loaded" :chart-label="populationDataLabel" :chart-labels="populationTop10CountriesLabels" :chart-data="populationTop10CountriesChartData"></doughnut-chart>
+        </div>
+      <div class="error-message" v-if="showError">
+        <h3>Oops!</h3>
+        {{ errorMessage }}
+      </div>
 
-    <h3>Country with the highest Male to Female ratio</h3>
-    <p v-html="highestMaleToFemaleRatio"></p>
-    <h3>Country with the highest Female to Male ratio</h3>
-    <p v-html="highestFemaleToMaleRatio"></p>
-    <div class="error-message" v-if="showError">
-      <h3>Oops!</h3>
-      {{ errorMessage }}
-    </div>
-
-    <div class="chart-content">
-      <h3>Country Population</h3>
-      <line-chart v-if="loaded" :chart-label="populationDataLabel" :chart-labels="populationDataLabels" :chart-tooltip="populationDataTooltip" :chart-data="populationDataChartData"></line-chart>
-      <bar-chart v-if="loaded" :chart-label="populationDataLabel" :chart-labels="populationDataLabels" :chart-tooltip="populationDataTooltip" :chart-data="populationDataChartData"></bar-chart>
-      <h3>Top 10 countries with the highest population:</h3>
-      <doughnut-chart v-if="loaded" :chart-label="populationDataLabel" :chart-labels="populationTop10CountriesLabels" :chart-tooltip="populationDataTooltip" :chart-data="populationTop10CountriesChartData"></doughnut-chart>
+      <div class="chart-content">
+        <h3>Country Population:</h3>
+        <label for="sorting">Sort by:</label>
+        <select id="sorting" v-model="sorting" @change="sortChart">
+          <option value="pop_asc">Population Asc</option>
+          <option value="pop_desc">Population Desc</option>
+          <option value="name_asc">Name Asc</option>
+          <option value="name_desc">Name Desc</option>
+        </select>
+        <label for="bartype">View as:</label>
+        <select id="bartype" v-model="bartype" @change="setBarType">
+          <option value="line">Line</option>
+          <option value="bar">Bar</option>
+        </select>
+        <h4>Chart</h4>
+        <line-chart v-if="loaded && bartype === 'line'" :chart-label="populationDataLabel" :chart-labels="populationDataLabels" :chart-data="populationDataChartData"></line-chart>
+        <bar-chart v-if="loaded && bartype === 'bar'" :chart-label="populationDataLabel" :chart-labels="populationDataLabels" :chart-data="populationDataChartData"></bar-chart>
+      </div>
     </div>
   </div>
 </template>
@@ -63,12 +83,12 @@ export default {
         loading: false,
         showError: false,
         errorMessage: 'Error',
-        sorting: 'asc',
+        sorting: 'pop_asc',
+        bartype: 'line',
         populationData: [],
         top10CountriesData: [],
         populationDataLabel: '',
         populationDataLabels: [],
-        populationDataTooltip: '',
         populationDataChartData: [],
         highestMaleToFemaleRatio: '',
         highestFemaleToMaleRatio: '',
@@ -99,15 +119,33 @@ export default {
       chartClicked (event) {
         console.log(event)
       },
+      setBarType () {
+        console.log(this.bartype)
+      },
       sortChart () {
         this.resetState()
         this.loading = true
-        if (this.sorting === 'asc') {
-          this.populationData.sort(function (pop1, pop2) { return pop1.population - pop2.population })
-        }
-        else {
+        if (this.sorting === 'pop_asc') {
           this.populationData.sort(function (pop1, pop2) { return pop2.population - pop1.population })
         }
+        else if (this.sorting === 'pop_desc') {
+          this.populationData.sort(function (pop1, pop2) { return pop1.population - pop2.population })
+        }
+        else if (this.sorting === 'name_asc') {
+          this.populationData.sort(function (pop1, pop2) {
+            if(pop1.country < pop2.country) return -1;
+            if(pop1.country > pop2.country) return 1;
+            return 0;
+          })
+        }
+        else if (this.sorting === 'name_desc') {
+          this.populationData.sort(function (pop1, pop2) {
+            if(pop1.country > pop2.country) return -1;
+            if(pop1.country < pop2.country) return 1;
+            return 0;
+          })
+        }
+        console.log(this.populationData)
         this.setPopulationChart()
       },
       setPopulationChart () {
@@ -122,7 +160,6 @@ export default {
         this.populationDataChartData = populationLabels
         this.populationDataLabels = countryLabels
         this.populationDataLabel = 'Population exploration'
-        this.populationDataTooltip = 'Hi'
         this.loaded = true
         this.loading = false
       },
@@ -187,12 +224,12 @@ export default {
           // Sorting by highest population
           countryDataList.sort(function (rat1, rat2) { return rat2.population - rat1.population })
           this.populationData = countryDataList
-          console.log(this.populationData)
-          let top10Countries = countryDataList
-          this.top10CountriesData = top10Countries.splice(10, 10);
-          console.log(this.top10CountriesData)
+          let top10Countries = countryDataList.slice(0)
+          this.top10CountriesData = top10Countries.splice(0, 10)
+
           this.settop10Chart()
           this.setPopulationChart()
+          console.log(this.populationData)
           console.log('end')
           // POPULATE CHART HERE
           //this.setPopulationChart()
@@ -288,5 +325,31 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.data {
+  text-align:left;
+}
+.data-container {
+  width:48%;
+  float:left;
+}
 
+.data-container h3 {
+  padding: 0 10px;
+}
+.panel-content {
+  margin: 10px 0;
+  padding: 1.25rem;
+  background-color: #4f5566;
+  border-radius: .25rem;
+  box-shadow: 0 2px 16px 0 rgba(0,0,0,.3);
+  text-align: center;
+  display: block;
+}
+.panel-content p {
+  color: #FFFFFF;
+}
+.panel-content h3 {
+  font-weight:bold;
+  color: #f78e41;
+}
 </style>

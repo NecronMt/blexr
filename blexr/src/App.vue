@@ -31,7 +31,7 @@ body {
 }
 
 .main-content {
-  padding: 20px 50px 20px;
+  padding: 0 50px 20px;
 }
 .search-area{
   padding: 10px 0 20px;
@@ -52,6 +52,9 @@ li {
   margin: 0 10px;
 }
 a {
-  color: #42b983;
+  color: #d4447b;
+}
+a:disabled {
+  color: #333333;
 }
 </style>

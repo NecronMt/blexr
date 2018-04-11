@@ -14,10 +14,6 @@ export default {
     chartLabel: {
       type: String,
       required: true
-    },
-    chartTooltip: {
-      type: String,
-      required: true
     }
   },
   data () {
@@ -78,11 +74,9 @@ export default {
         datasets: [
           {
             label: this.chartLabel,
-            borderColor: '#ff3300',
-            pointBackgroundColor: 'white',
+            borderColor: '#f78e41',
             borderWidth: 1,
-            pointBorderColor: '#800000',
-            backgroundColor: 'transparent',
+            backgroundColor: '#d2407e',
             data: this.chartData
           }
         ]

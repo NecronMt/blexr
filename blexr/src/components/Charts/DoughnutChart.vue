@@ -14,10 +14,6 @@ export default {
     chartLabel: {
       type: String,
       required: true
-    },
-    chartTooltip: {
-      type: String,
-      required: true
     }
   },
   data () {
@@ -55,9 +51,10 @@ export default {
         datasets: [
           {
             label: this.datalabel,
-            backgroundColor: 'transparent',
-            borderColor: '#ff3300',
-            hoverBackgroundColor: '#333333',
+            backgroundColor: ['#E5633C', '#FF6E43', '#F76B41', '#BF5332', '#7F3722', '#7F274C', '#BF3A73', '#D2407E', '#FF4E99', '#E5468A'],
+            borderColor: 'transparent',
+            hoverBorderColor: '#FEFEFE',
+            hoverBackgroundColor: '#f78e41',
             data: this.chartData
           }
         ]
