@@ -1,20 +1,26 @@
 <template>
   <div class="main-content">
     <h1>Reports</h1>
-    <v-client-table v-if="tableLoaded" :columns="columns" :data="tableData" :options="options"></v-client-table>
     <div class="search-area">
-      <input class="search" placeholder="Search by Country" type="search" name="search" @keyup.enter="requestData" v-model="country">
-      <button class="search-btn" @click="requestData">Search</button>
+      <label for="search">Search:</label>
+      <input class="search" placeholder="Search by Country" type="search" name="search" @keyup.enter="requestInputData" v-model="country">
+      <button class="search-btn" @click="requestInputData">Search</button>
     </div>
-
+    <span v-if="loading" class="loading">
+      <img src="../assets/loading.gif">
+    </span>
     <div class="error-message" v-if="showError">
       <h3>Oops!</h3>
       {{ errorMessage }}
     </div>
-
     <div class="chart-content">
       <bar-chart v-if="loaded" :chart-label="label" :chart-labels="labels" :chart-data="population"></bar-chart>
     </div>
+    <v-client-table v-if="tableLoaded" :columns="columns" :data="tableData" :options="options">
+      <!-- <div slot="child_row" slot-scope="props">
+        Male to Female Ratio: {{props.row.maletofemaleratio}} : {{props.row.femaletomaleratio}}
+      </div> -->
+    </v-client-table>
   </div>
 </template>
 
@@ -34,13 +40,14 @@ export default {
   import axios from 'axios'
   import LineChart from '@/components/Charts/LineChart'
   import BarChart from '@/components/Charts/BarChart'
-  import countryData from '@/data/world.js'
-  import {ClientTable} from 'vue-tables-2';
+  import methods from '@/mixins.js'
+  import {ClientTable, Event} from 'vue-tables-2';
   Vue.use(ClientTable);
-  let date = new Date(Date.now());
-  const countryArray = countryData.countries;
-  const othercountryArray = countryData.misccountrydata;
+
   export default {
+    mixins: [
+      methods
+    ],
     components: {
       LineChart,
       BarChart
@@ -54,12 +61,18 @@ export default {
             country: 'Country Name',
             population: 'Population',
             females: 'No. of Females',
-            males: 'No. of Males',
-            maletofemaleratio: 'Male to Female Ratio',
-            femaletomaleratio: 'Female to Male Ratio'
+            males: 'No. of Males'
           },
-          sortable: ['country'],
-          filterable: ['country']
+          sortable: ['country', 'population'],
+          filterable: ['country'],
+          customFilters: [
+            {
+              name:'alphabet',
+              callback: function(row, query) {
+                return row.population[0] == query;
+              }
+            }
+          ]
         },
         country: null,
         loaded: false,
@@ -76,9 +89,14 @@ export default {
     mounted () {
       if (this.$route.params.country) {
         this.country = this.$route.params.country
-        this.requestData()
+        this.requestSingleData(country).then(data => {
+          data.sort(function (data1, data2) { return data2.population - data1.population })
+          this.tableData = data
+          this.tableLoaded = true
+          this.loading = false
+        })
       }
-      this.requestFullData()
+      this.getData()
     },
     computed: {
 
@@ -88,60 +106,29 @@ export default {
         this.loaded = false
         this.showError = false
       },
-      requestFullData () {
+      getData () {
         this.resetState()
         this.loading = true
-        let year_today = date.getFullYear()
-        let countryPopulationPromises = []
-        countryArray.forEach(function (country) {
-          countryPopulationPromises.push(axios.get(`http://api.population.io:80/1.0/population/${year_today}/${country}`))
-        });
-
-        axios.all(countryPopulationPromises).then((results) => {
-          let countryDataList = []
-          results.forEach(function(response, index) {
-            // Populate data for each country
-            let females = response.data.map(entry => entry.females)
-            let males = response.data.map(entry => entry.males)
-            let total = response.data.map(entry => entry.total)
-            let femalePopulation = females.reduce((a, b) => a + b, 0);
-            let malePopulation = males.reduce((a, b) => a + b, 0);
-            let totalPopulation = total.reduce((a, b) => a + b, 0);
-
-            let countryObject = {
-              country: countryArray[index],
-              population: totalPopulation,
-              females: femalePopulation,
-              males: malePopulation,
-              maletofemaleratio: ((malePopulation / femalePopulation) * 100).toFixed(2),
-              femaletomaleratio: ((femalePopulation / malePopulation) * 100).toFixed(2)
-            }
-            countryDataList.push(countryObject)
-          })
-          countryDataList.sort(function (data1, data2) { return data2.population - data1.population })
-          this.tableData = countryDataList
-          console.log(this.tableData)
+        this.requestData().then(data => {
+          data.sort(function (data1, data2) { return data2.population - data1.population })
+          this.tableData = data
           this.tableLoaded = true
           this.loading = false
-        });
+        })
       },
-      requestData () {
+      requestInputData () {
         if (this.country === null || this.country === '' || this.country === 'undefined') {
           this.errorMessage = 'Please input a valid country'
           this.showError = true
           return
         }
-        let promises = [], mainObject = {}
         var date = new Date(Date.now())
         var date_today = date.getFullYear() + "-" + (date.getMonth()+1) + "-" + date.getDate()
-        console.log(date_today)
-
         this.resetState()
         this.loading = true
 
         axios.get(`http://api.population.io:80/1.0/population/${this.country}/${date_today}/`)
         .then(response => {
-          console.log(response.data)
           this.rawData = response.data
           this.labels = [this.country]
           this.population = [response.data.total_population.population]
@@ -158,6 +145,65 @@ export default {
 </script>
 
 <style>
+.VueTables {
+  width: 750px;
+}
+.VueTables__child-row-toggler--open::before {
+    content: "-";
+}
+.VueTables__child-row-toggler--closed::before {
+    content: "+";
+}
+.VueTables__sortable {
+  cursor: pointer;
+}
+.glyphicon {
+  height: 25px;
+  width: 25px;
+  float: right;
+  background-size: 100%;
+}
+.glyphicon-sort {
+  background-image: url("../assets/icons/sort.png");
+}
+.glyphicon-chevron-down {
+  background-image: url("../assets/icons/down.svg");
+}
+.glyphicon-chevron-up {
+  background-image: url("../assets/icons/up.svg");
+}
+.form-group {
+  margin: 10px;
+  display: inline-block;
+}
+.form-group label{
+  vertical-align: middle;
+  margin-right: 10px;
+}
+table {
+  border-collapse: collapse;
+  width: 750px;
+}
+table td, table th {
+  border: 1px solid #DDDDDD;
+  line-height: 1.45;
+  padding:6px;
+  margin:0;
+  position: relative;
+}
+table tr {
+  padding:0;
+  margin:0;
+}
+table tbody tr:hover {
+  background-color: #CECECE;
+}
+table tr:nth-of-type(odd){
+  background-color: #F9F9F9;
+}
+.VuePagination nav {
+  text-align: center;
+}
 .VuePagination li {
   margin: 0;
 }
@@ -184,5 +230,18 @@ export default {
 }
 .VuePagination li a:hover {
   background-color: #FEFEFE;
+  color: #D4447B
+}
+.VuePagination li.active a{
+  background-color: #D4447B;
+  color: #FFFFFF;
+}
+.VuePagination li.disabled a {
+  cursor: not-allowed;
+  background-color: #CECECE;
+  color: #111;
+}
+.VuePagination li.disabled a:hover {
+  background-color: #CECECE;
 }
 </style>

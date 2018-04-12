@@ -19,7 +19,6 @@ export default {
   name: 'SiteHeader',
   data () {
     return {
-      msg: 'Welcome to Your Vue.js App'
     }
   }
 }
@@ -43,6 +42,13 @@ export default {
   width: 150px;
   height: auto;
 }
+.router-link-exact-active {
+  padding:10px;
+  background-color: #111111;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+}
 h1, h2, h3 {
   font-weight: bold;
   color: #F5F5F5;
@@ -61,6 +67,7 @@ a {
   color: #FFFFFF;
   text-decoration: none;
   font-weight: bold;
+  padding: 10px;
 }
 a:hover {
   text-decoration: underline;

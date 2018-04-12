@@ -4,19 +4,22 @@ import Home from '@/components/Home'
 import Reports from '@/components/Reports'
 
 Vue.use(Router)
+const routes = [
+  {
+    path: '/',
+    name: 'Home',
+    component: Home
+  },
+  {
+    path: '/reports',
+    name: 'Reports',
+    component: Reports
+  }
+]
 
-export default new Router({
+const router = new Router({
   mode: 'history',
-  routes: [
-    {
-      path: '/',
-      name: 'Home',
-      component: Home
-    },
-    {
-      path: '/reports',
-      name: 'Reports',
-      component: Reports
-    }
-  ]
+  routes
 })
+
+export default router

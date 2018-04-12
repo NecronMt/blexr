@@ -53,9 +53,8 @@ export default {
           mode: 'nearest',
           callbacks: {
             label: function (tooltipItems, data) {
-              // console.log('my chart tooltip')
-              console.log(this.chartTooltip)
-              return tooltipItems.xLabel + ': ' + tooltipItems.yLabel
+              var formattedNumber = new Intl.NumberFormat('en-IR').format(tooltipItems.yLabel)
+              return tooltipItems.xLabel + ': ' + formattedNumber
             }
           }
         },

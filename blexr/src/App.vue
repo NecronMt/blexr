@@ -4,15 +4,18 @@
     <div class="main-content">
       <router-view/>
     </div>
+    <app-footer></app-footer>
   </div>
 </template>
 
 <script>
 import Header from './components/Header.vue'
+import Footer from './components/Footer.vue'
 export default {
   name: 'App',
   components: {
-    'app-header': Header
+    'app-header': Header,
+    'app-footer': Footer
   }
 }
 </script>
@@ -56,5 +59,30 @@ a {
 }
 a:disabled {
   color: #333333;
+}
+input, select, button {
+  padding: 6px 12px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #555;
+  background-color: #FFFFFF;
+  border: 1px solid #CCCCCC;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+}
+input:focus, textarea:focus, select:focus {
+  border: 1px solid #d4447b;
+  box-shadow: 0 0 0 1px #d4447b;
+  -webkit-box-shadow: 0 0 0 1px #d4447b;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+}
+button {
+  cursor: pointer;
+}
+button:hover {
+  background-color: #DDDDDD;
 }
 </style>

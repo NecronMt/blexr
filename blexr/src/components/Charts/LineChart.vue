@@ -45,7 +45,8 @@ export default {
             var firstPoint = activePoints[0]
             var label = this.data.labels[firstPoint._index]
             var value = this.data.datasets[firstPoint._datasetIndex].data[firstPoint._index]
-            console.log(label + ': ' + value)
+            var formattedNumber = new Intl.NumberFormat('en-IR').format(value)
+            console.log(label + ': ' + formattedNumber)
             return {label: value}
             // do something here with the clicked data
           }
@@ -58,7 +59,8 @@ export default {
           mode: 'nearest',
           callbacks: {
             label: function (tooltipItems, data) {
-              return tooltipItems.xLabel + ': ' + tooltipItems.yLabel
+              var formattedNumber = new Intl.NumberFormat('en-IR').format(tooltipItems.yLabel)
+              return tooltipItems.xLabel + ': ' + formattedNumber
             }
           }
         },

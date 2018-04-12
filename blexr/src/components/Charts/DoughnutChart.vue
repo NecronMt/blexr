@@ -20,6 +20,7 @@ export default {
     return {
       options: {
         onClick (event) {
+          console.log(event)
           var activePoints = this.getElementsAtEventForMode(event, 'point', this.options)
           if (activePoints.length > 0) {
             var firstPoint = activePoints[0]
@@ -34,7 +35,17 @@ export default {
           display: false
         },
         tooltips: {
-          enabled: true
+          enabled: true,
+          mode: 'nearest',
+          callbacks: {
+            label: function (tooltipItems, data) {
+              var current = tooltipItems.index
+              var label = data.labels[current]
+              var value = data.datasets[0].data[current]
+              var formattedNumber = new Intl.NumberFormat('en-IR').format(value)
+              return label + ': ' + formattedNumber
+            }
+          }
         },
         responsive: true,
         maintainAspectRatio: false
@@ -45,6 +56,9 @@ export default {
 
   },
   methods: {
+    // search (country) {
+    //   this.$router.go({name: 'Reports', params: { country }})
+    // },
     renderBarChart: function () {
       this.renderChart({
         labels: this.chartLabels,

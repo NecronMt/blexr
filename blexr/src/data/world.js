@@ -203,7 +203,7 @@ let countries = [
   'Zimbabwe'
 ]
 
-let misccountrydata = [
+let miscCountryData = [
   'Eastern Africa',
   'Eastern Asia',
   'Eastern Europe',
@@ -229,7 +229,10 @@ let misccountrydata = [
   'OCEANIA',
   'West Bank and Gaza',
   'Western Sahara',
-  'Sub-Saharan Africa',
+  'Sub-Saharan Africa'
+]
+
+let detailedCountryData = [
   'Least developed countries',
   'Other non-specified areas',
   'More developed regions',
@@ -238,4 +241,4 @@ let misccountrydata = [
   'Less developed regions, excluding least developed countries'
 ]
 
-export default {countries, misccountrydata}
+export default {countries, miscCountryData, detailedCountryData}
